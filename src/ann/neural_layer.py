@@ -72,8 +72,8 @@ class DenseLayer:
         """
         # Gradient w.r.t. weights: (input_size, batch_size) @ (batch_size, output_size)
         self.grad_W = self.input.T @ grad_output
-        # Gradient w.r.t. biases: sum over batch, 1D array
-        self.grad_b = np.sum(grad_output, axis=0)
+        # Gradient w.r.t. biases: sum over batch, keepdims=True so shape is (1, output_size) matching self.b
+        self.grad_b = np.sum(grad_output, axis=0, keepdims=True)
         # Gradient for previous layer
         grad_input = grad_output @ self.W.T
         return grad_input

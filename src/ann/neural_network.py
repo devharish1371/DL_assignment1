@@ -7,7 +7,7 @@ import os
 
 from .neural_layer import DenseLayer
 from .activations import get_activation
-from .objective_functions import get_loss
+from .objective_functions import get_loss, CrossEntropyLoss
 from .optimizers import get_optimizer
 
 
@@ -183,19 +183,24 @@ class NeuralNetwork:
         # Compute softmax probabilities from logits for the output layer
         y_pred = self.activations[-1].forward(logits)
 
-        # Fused cross-entropy + softmax:
-        # this returns dL/dz (gradient w.r.t. logits)
+        # Compute loss gradient
         grad = self.loss_fn.backward(y_true, y_pred)
 
         grad_W_list = []
         grad_b_list = []
 
+        # Only skip softmax.backward() when using fused cross-entropy gradient
+        is_fused = isinstance(self.loss_fn, CrossEntropyLoss)
+
         # Backprop through layers in reverse; collect grads so that index 0 = last layer
         for i in reversed(range(len(self.layers))):
-            # For the output layer, skip activation.backward() because the
-            # loss gradient is already w.r.t. logits.
             if i < len(self.layers) - 1:
+                # Hidden layer: always apply activation backward
                 grad = self.activations[i].backward(grad)
+            elif not is_fused:
+                # Output layer with non-fused loss (e.g. MSE): apply softmax backward
+                grad = self.activations[i].backward(grad)
+            # else: fused cross-entropy — skip softmax backward
 
             # Backprop through dense layer (sets layer.grad_W, layer.grad_b)
             grad = self.layers[i].backward(grad)
