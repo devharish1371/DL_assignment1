@@ -5,10 +5,10 @@ Handles forward and backward propagation loops
 import numpy as np
 import os
 
-from src.ann.neural_layer import DenseLayer
-from src.ann.activations import get_activation
-from src.ann.objective_functions import get_loss
-from src.ann.optimizers import get_optimizer
+from .neural_layer import DenseLayer
+from .activations import get_activation
+from .objective_functions import get_loss
+from .optimizers import get_optimizer
 
 
 class NeuralNetwork:
