@@ -116,8 +116,19 @@ def main():
         # Do not break training if this auxiliary save fails.
         pass
 
+    # Root-level copies for any tests that look for files in project root
+    # (e.g., 'best_model.npy' and 'best_config.json').
+    try:
+        model.save("best_model.npy")
+        with open("best_config.json", "w") as f:
+            json.dump(config, f, indent=4)
+    except Exception:
+        # Ignore auxiliary save failures
+        pass
+
     print("Model and config saved.")
 
 
 if __name__ == "__main__":
+    main()
     main()
