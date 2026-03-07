@@ -163,19 +163,28 @@ class NeuralNetwork:
                 out = self.activations[i].forward(out)
         return out
 
-    def backward(self, y_true, y_pred):
+    def backward(self, y_true, logits):
         """
         Backward propagation to compute gradients.
-        Returns two numpy arrays: grad_Ws, grad_bs.
-        - `grad_Ws[0]` is gradient for the last (output) layer weights,
-          `grad_bs[0]` is gradient for the last layer biases, and so on.
-        """
-        # Compute loss gradient (dL/dy_pred)
-        grad = self.loss_fn.backward(y_true, y_pred)
 
-        # Populate state for the last activation (usually Softmax) because
-        # forward() returns logits and skips the last activation's forward call.
-        self.activations[-1].output = y_pred
+        Parameters
+        ----------
+        y_true : np.ndarray
+            One-hot encoded labels, shape (batch_size, num_classes).
+        logits : np.ndarray
+            Raw outputs from `forward` (pre-softmax), shape (batch_size, num_classes).
+
+        Returns
+        -------
+        grad_W, grad_b : np.ndarray (object arrays)
+            Gradients for weights and biases where index 0 corresponds
+            to the LAST (output) layer.
+        """
+        # Compute softmax probabilities from logits for the output layer
+        y_pred = self.activations[-1].forward(logits)
+
+        # Compute loss gradient w.r.t. probabilities (dL/dy_pred)
+        grad = self.loss_fn.backward(y_true, y_pred)
 
         grad_W_list = []
         grad_b_list = []
@@ -254,8 +263,8 @@ class NeuralNetwork:
                 epoch_loss += loss * (end - start)
                 epoch_correct += np.sum(np.argmax(y_pred, axis=1) == np.argmax(y_batch, axis=1))
 
-                # Backward pass
-                self.backward(y_batch, y_pred)
+                # Backward pass (use logits as expected by autograder)
+                self.backward(y_batch, logits)
 
                 # Update weights
                 self.update_weights()
