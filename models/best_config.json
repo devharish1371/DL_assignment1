@@ -14,5 +14,5 @@
     ],
     "activation": "relu",
     "weight_init": "xavier",
-    "validation_accuracy": 0.9698333333333333
+    "validation_accuracy": 0.9686666666666667
 }

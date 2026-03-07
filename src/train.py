@@ -97,13 +97,13 @@ def main():
     # Save best model
     # -------------------------
 
-    model.save("best_model.npy")
+    model.save("models/best_model.npy")
 
     config = vars(args)
 
     config["validation_accuracy"] = float(val_acc)
 
-    with open("best_config.json", "w") as f:
+    with open("models/best_config.json", "w") as f:
         json.dump(config, f, indent=4)
 
     print("Model and config saved.")

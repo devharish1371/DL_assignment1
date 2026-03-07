@@ -12,8 +12,8 @@ def parse_args():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--model_path", default="best_model.npy")
-    parser.add_argument("--config_path", default="best_config.json")
+    parser.add_argument("--model_path", default="models/best_model.npy")
+    parser.add_argument("--config_path", default="models/best_config.json")
 
     return parser.parse_args()
 
