@@ -183,7 +183,8 @@ class NeuralNetwork:
         # Compute softmax probabilities from logits for the output layer
         y_pred = self.activations[-1].forward(logits)
 
-        # Compute loss gradient w.r.t. probabilities (dL/dy_pred)
+        # Fused cross-entropy + softmax:
+        # this returns dL/dz (gradient w.r.t. logits)
         grad = self.loss_fn.backward(y_true, y_pred)
 
         grad_W_list = []
@@ -191,8 +192,11 @@ class NeuralNetwork:
 
         # Backprop through layers in reverse; collect grads so that index 0 = last layer
         for i in reversed(range(len(self.layers))):
-            # Backprop through activation (softmax for last layer, activation for others)
-            grad = self.activations[i].backward(grad)
+            # For the output layer, skip activation.backward() because the
+            # loss gradient is already w.r.t. logits.
+            if i < len(self.layers) - 1:
+                grad = self.activations[i].backward(grad)
+
             # Backprop through dense layer (sets layer.grad_W, layer.grad_b)
             grad = self.layers[i].backward(grad)
             grad_W_list.append(self.layers[i].grad_W)

@@ -30,18 +30,18 @@ class CrossEntropyLoss:
 
     def backward(self, y_true, y_pred):
         """
-        Compute gradient of loss w.r.t. y_pred (modular gradient).
+        Fused cross-entropy + softmax gradient.
 
-        Args:
-            y_true: one-hot encoded labels (batch_size, num_classes)
-            y_pred: output probabilities (batch_size, num_classes)
+        Given softmax probabilities y_pred, this returns the gradient
+        w.r.t. the logits:
 
-        Returns:
-            Gradient (batch_size, num_classes)
+            dL/dz = (y_pred - y_true) / batch_size
+
+        This is numerically stable and should be used together with
+        skipping the softmax.backward() call at the output layer.
         """
         batch_size = y_true.shape[0]
-        eps = 1e-12
-        return -y_true / (y_pred + eps) / batch_size
+        return (y_pred - y_true) / batch_size
 
 
 class MSELoss:
