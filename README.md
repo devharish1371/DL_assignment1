@@ -17,6 +17,13 @@ No deep learning frameworks such as **PyTorch**, **TensorFlow**, or **JAX** are 
 
 ---
 
+## Submission Links
+
+- **GitHub repository**: [`DL_assignment1`](https://github.com/devharish1371/DL_assignment1)
+- **W&B report**: [`DA6401 Assignment 1 – MLP Experiments Report`](https://wandb.ai/devharishabsm-indian-institute-of-technology-madras/da6401-a1/reports/DA6401-Assignment-1-MLP-Experiments-Report--VmlldzoxNjEzNTAzNw?accessToken=lnvatragvy2ibvv51zxmr2m7guwxzuweanyqlfa43t0t0nswerz0s8xy5o985358)
+
+---
+
 # Project Structure
 
 ```

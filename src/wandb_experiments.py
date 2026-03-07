@@ -18,6 +18,7 @@ reproduce experiments cell-by-cell.
 """
 
 import argparse
+import os
 import types
 import numpy as np
 import wandb
@@ -27,7 +28,7 @@ from src.utils.data_loader import load_data
 from sklearn.metrics import confusion_matrix
 
 
-WANDB_PROJECT = "da6401-a1"
+WANDB_PROJECT = os.environ.get("DA6401_WANDB_PROJECT", "da6401-a1")
 WANDB_ENTITY = None  # set to your username/team if needed
 
 
@@ -213,7 +214,18 @@ def run_2_2_sweep(count=20):
     sweep_id = wandb.sweep(sweep=sweep_config, project=WANDB_PROJECT)
 
     def sweep_train():
-        cfg_dict = wandb.config
+        """
+        One sweep trial. We MUST call wandb.init() first so wandb.config is populated.
+        We then train inside this same run (no nested runs).
+        """
+        run = wandb.init(
+            project=WANDB_PROJECT,
+            entity=WANDB_ENTITY,
+            group="2.2_sweep",
+            tags=["2.2", "sweep"],
+            reinit=True,
+        )
+        cfg_dict = run.config
         cfg = make_cfg(
             dataset="mnist",
             epochs=10,
@@ -227,11 +239,60 @@ def run_2_2_sweep(count=20):
             activation=cfg_dict.activation,
             weight_init="xavier",
         )
-        run_one_training(
-            cfg,
-            group="2.2_sweep",
-            tags=["2.2", "sweep"],
+
+        # Inline training loop (similar to run_one_training, but reusing this run)
+        model, (X_train, y_train, X_val, y_val, X_test, y_test) = build_model_and_data(
+            cfg
         )
+        n = X_train.shape[0]
+        for epoch in range(1, cfg.epochs + 1):
+            perm = np.random.permutation(n)
+            X_shuffled = X_train[perm]
+            y_shuffled = y_train[perm]
+
+            epoch_loss = 0.0
+            epoch_correct = 0
+            num_batches = int(np.ceil(n / cfg.batch_size))
+
+            for b in range(num_batches):
+                start = b * cfg.batch_size
+                end = min(start + cfg.batch_size, n)
+                X_batch = X_shuffled[start:end]
+                y_batch = y_shuffled[start:end]
+
+                logits = model.forward(X_batch)
+                y_pred = model.activations[-1].forward(logits)
+
+                loss = model.loss_fn.forward(y_batch, y_pred)
+                if model.optimizer.weight_decay > 0:
+                    l2_reg = sum(np.sum(layer.W ** 2) for layer in model.layers)
+                    loss += 0.5 * model.optimizer.weight_decay * l2_reg
+
+                epoch_loss += loss * (end - start)
+                epoch_correct += np.sum(
+                    np.argmax(y_pred, axis=1) == np.argmax(y_batch, axis=1)
+                )
+
+                model.backward(y_batch, logits)
+                model.update_weights()
+
+            train_loss = epoch_loss / n
+            train_acc = epoch_correct / n
+            val_loss, val_acc = model.evaluate(X_val, y_val)
+
+            wandb.log(
+                {
+                    "epoch": epoch,
+                    "train_loss": train_loss,
+                    "train_acc": train_acc,
+                    "val_loss": val_loss,
+                    "val_acc": val_acc,
+                }
+            )
+
+        test_loss, test_acc = model.evaluate(X_test, y_test)
+        wandb.log({"test_loss": test_loss, "test_acc": test_acc})
+        run.finish()
 
     wandb.agent(sweep_id, function=sweep_train, count=count)
 

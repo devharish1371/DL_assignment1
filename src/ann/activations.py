@@ -36,7 +36,8 @@ class ReLU:
 
     def forward(self, x):
         self.input = x
-        return np.maximum(0, x)
+        self.output = np.maximum(0, x)
+        return self.output
 
     def backward(self, grad_output):
         """dL/dz = dL/dy * indicator(x > 0)"""
