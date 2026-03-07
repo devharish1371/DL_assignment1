@@ -8,8 +8,11 @@ from utils.data_loader import load_data
 
 def accuracy(y_true, y_pred):
 
+    # y_true is one-hot; convert to class indices
     y_true = np.argmax(y_true, axis=1)
-
+    # y_pred may be class indices or probability/logit vectors
+    if isinstance(y_pred, np.ndarray) and y_pred.ndim > 1:
+        y_pred = np.argmax(y_pred, axis=1)
     return np.mean(y_true == y_pred)
 
 

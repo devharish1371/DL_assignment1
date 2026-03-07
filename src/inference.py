@@ -78,7 +78,9 @@ def main():
     # Predict
     # -------------------------
 
-    preds = model.predict(X_test)
+    # model.predict returns class probabilities; convert to class indices
+    probs = model.predict(X_test)
+    preds = np.argmax(probs, axis=1)
 
     y_true = np.argmax(y_test, axis=1)
 
