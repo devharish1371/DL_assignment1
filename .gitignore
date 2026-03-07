@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.DS_Store
+wandb/
+*.npy
+*.json
+!best_config.json
+!best_model.npy
+!models/best_config.json
+!models/best_model.npy
