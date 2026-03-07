@@ -180,6 +180,13 @@ class NeuralNetwork:
             Gradients for weights and biases where index 0 corresponds
             to the LAST (output) layer.
         """
+        # One-hot encode y_true if it is passed as integer labels (1D)
+        if y_true.ndim == 1:
+            num_classes = logits.shape[1]
+            y_one_hot = np.zeros((y_true.shape[0], num_classes))
+            y_one_hot[np.arange(y_true.shape[0]), y_true.astype(int)] = 1.0
+            y_true = y_one_hot
+
         # Compute softmax probabilities from logits for the output layer
         y_pred = self.activations[-1].forward(logits)
 
