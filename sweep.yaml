@@ -1,0 +1,37 @@
+method: random
+
+metric:
+  name: val_accuracy
+  goal: maximize
+
+parameters:
+
+  epochs:
+    value: 10
+
+  batch_size:
+    values: [32,64,128]
+
+  lr:
+    values: [0.0001,0.001,0.01]
+
+  optimizer:
+    values: ["sgd","momentum","nag","rmsprop","adam","nadam"]
+
+  activation:
+    values: ["relu","tanh","sigmoid"]
+
+  hidden_sizes:
+    values:
+      - [128,128,128]
+      - [64,64,64]
+      - [128,64,32]
+
+  weight_init:
+    values: ["random","xavier"]
+
+  loss:
+    values: ["cross_entropy"]
+
+  weight_decay:
+    values: [0.0,0.0005]
