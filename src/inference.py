@@ -8,19 +8,29 @@ from ann.neural_network import NeuralNetwork
 from utils.data_loader import load_data
 
 
-def parse_args():
+def parse_arguments(args=None):
+    """
+    Parse command-line arguments for the inference script.
 
+    The autograder imports and calls this function directly, so it must be
+    available as `inference.parse_arguments`.
+
+    Parameters
+    ----------
+    args : list[str] or None
+        Optional list of arguments to parse (used by tests). If None,
+        arguments are taken from ``sys.argv``.
+    """
     parser = argparse.ArgumentParser()
-
     parser.add_argument("--model_path", default="models/best_model.npy")
     parser.add_argument("--config_path", default="models/best_config.json")
-
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def main():
 
-    args = parse_args()
+    # When running from the command line we let argparse read from sys.argv.
+    args = parse_arguments()
 
     # -------------------------
     # Load config
