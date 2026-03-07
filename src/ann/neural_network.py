@@ -22,9 +22,23 @@ class NeuralNetwork:
         index 0 corresponds to the LAST (output) layer.
     """
 
-    def __init__(self, cli_args):
+    def __init__(self, cli_args=None, **kwargs):
         """
-        Build the network from CLI arguments (or equivalent dict/namespace).
+        Build the network from either:
+          1) A CLI-style namespace/dict (`cli_args`), as used by the autograder, or
+          2) Explicit keyword arguments (as used by `src/train.py`), e.g.:
+
+             NeuralNetwork(
+                 input_size=784,
+                 hidden_sizes=[128, 64],
+                 output_size=10,
+                 activation="relu",
+                 loss="cross_entropy",
+                 optimizer="sgd",
+                 learning_rate=0.01,
+                 weight_decay=0.0,
+                 weight_init="xavier",
+             )
 
         Expected attributes on cli_args:
             - dataset: str
@@ -39,18 +53,61 @@ class NeuralNetwork:
             - batch_size: int
             - epochs: int
         """
-        # Parse config
-        num_layers = getattr(cli_args, 'num_layers', 3)
-        hidden_size = getattr(cli_args, 'hidden_size', [128])
-        activation_name = getattr(cli_args, 'activation', 'relu')
-        weight_init = getattr(cli_args, 'weight_init', 'xavier')
-        optimizer_name = getattr(cli_args, 'optimizer', 'adam')
-        lr = getattr(cli_args, 'learning_rate', 0.001)
-        weight_decay = getattr(cli_args, 'weight_decay', 0.0)
-        loss_name = getattr(cli_args, 'loss', 'cross_entropy')
+        # ------------------------------------------------------------------
+        # Normalise configuration source into a simple attribute namespace
+        # ------------------------------------------------------------------
+        if cli_args is None:
+            # Construct a lightweight namespace from keyword arguments so that
+            # the rest of the implementation can use a single `cfg` object.
+            class Cfg:
+                pass
 
-        input_size = getattr(cli_args, 'input_size', 784)
-        output_size = getattr(cli_args, 'output_size', 10)
+            cfg = Cfg()
+
+            # Map old training-script style kwargs to expected attributes
+            input_size = kwargs.get("input_size", 784)
+            output_size = kwargs.get("output_size", 10)
+
+            hidden_sizes = kwargs.get("hidden_sizes")
+            if hidden_sizes is None:
+                hidden_sizes = kwargs.get("hidden_size", [128])
+
+            # Derive num_layers from hidden_sizes if not explicitly provided
+            if "num_layers" in kwargs:
+                num_layers = kwargs["num_layers"]
+            else:
+                if isinstance(hidden_sizes, (list, tuple)):
+                    num_layers = len(hidden_sizes)
+                else:
+                    num_layers = 3
+
+            cfg.input_size = input_size
+            cfg.output_size = output_size
+            # internal attribute name expected below is `hidden_size`
+            cfg.hidden_size = hidden_sizes
+            cfg.num_layers = num_layers
+
+            cfg.activation = kwargs.get("activation", "relu")
+            cfg.weight_init = kwargs.get("weight_init", "xavier")
+            cfg.optimizer = kwargs.get("optimizer", "adam")
+            cfg.learning_rate = kwargs.get("learning_rate", 0.001)
+            cfg.weight_decay = kwargs.get("weight_decay", 0.0)
+            cfg.loss = kwargs.get("loss", "cross_entropy")
+        else:
+            cfg = cli_args
+
+        # Parse config from unified cfg namespace
+        num_layers = getattr(cfg, 'num_layers', 3)
+        hidden_size = getattr(cfg, 'hidden_size', [128])
+        activation_name = getattr(cfg, 'activation', 'relu')
+        weight_init = getattr(cfg, 'weight_init', 'xavier')
+        optimizer_name = getattr(cfg, 'optimizer', 'adam')
+        lr = getattr(cfg, 'learning_rate', 0.001)
+        weight_decay = getattr(cfg, 'weight_decay', 0.0)
+        loss_name = getattr(cfg, 'loss', 'cross_entropy')
+
+        input_size = getattr(cfg, 'input_size', 784)
+        output_size = getattr(cfg, 'output_size', 10)
 
         # Normalize hidden_size to a list of per-layer sizes
         if isinstance(hidden_size, int):
